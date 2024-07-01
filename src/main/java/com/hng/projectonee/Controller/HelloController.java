@@ -23,7 +23,7 @@ public class HelloController {
     public Map<String, String> hello(@RequestParam String visitor_name, HttpServletRequest request) {
 
         String clientIp = request.getRemoteAddr();
-g
+
 
         Map<String, String> locationData = locationService.getLocationAndTemperature(clientIp);
         String location = locationData.get("location");
