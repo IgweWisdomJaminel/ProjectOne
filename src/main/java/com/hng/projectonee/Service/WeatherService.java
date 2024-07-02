@@ -24,11 +24,17 @@ public class WeatherService {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     public String getLocationByIp(String ip) {
-        String url = UriComponentsBuilder.fromHttpUrl("https://ipinfo.io")
-                .pathSegment(ip)
-                .queryParam("token", ipinfoApiKey)
-                .toUriString();
         try {
+
+            if (ip.equals("0:0:0:0:0:0:0:1") || ip.equals("127.0.0.1")) {
+                ip = getPublicIp();
+            }
+
+            String url = UriComponentsBuilder.fromHttpUrl("https://ipinfo.io")
+                    .pathSegment(ip)
+                    .queryParam("token", ipinfoApiKey)
+                    .toUriString();
+
             String response = restTemplate.getForObject(url, String.class);
             System.out.println("IP Geolocation response: " + response);
             JsonNode jsonNode = objectMapper.readTree(response);
@@ -57,6 +63,21 @@ public class WeatherService {
         } catch (Exception e) {
             System.err.println("Unexpected error: " + e.getMessage());
             throw new RuntimeException("Unexpected error occurred while fetching weather by location.", e);
+        }
+    }
+   //God Abeg😭😭😭
+    public String getPublicIp() {
+        try {
+            String url = "https://api.ipify.org?format=json";
+            String response = restTemplate.getForObject(url, String.class);
+            JsonNode jsonNode = objectMapper.readTree(response);
+            return jsonNode.get("ip").asText();
+        } catch (HttpClientErrorException e) {
+            System.err.println("Error getting public IP: " + e.getResponseBodyAsString());
+            throw e;
+        } catch (Exception e) {
+            System.err.println("Unexpected error: " + e.getMessage());
+            throw new RuntimeException("Unexpected error occurred while fetching public IP.", e);
         }
     }
 }
