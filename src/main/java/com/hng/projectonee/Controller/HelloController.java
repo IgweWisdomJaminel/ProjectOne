@@ -17,21 +17,12 @@ public class HelloController {
 
     @GetMapping("/api/hello")
     public String sayHello(@RequestParam(name = "visitor_name") String visitorName, HttpServletRequest request) {
-        String clientIp = request.getRemoteAddr();
+        String clientIp = getClientIp(request);
         try {
 
             String locationResponse = weatherService.getLocationByIp(clientIp);
             JSONObject locationJson = new JSONObject(locationResponse);
             String city = locationJson.optString("city", "City not found");
-
-            if (city.equals("Localhost")) {
-
-                JSONObject responseJson = new JSONObject();
-                responseJson.put("client_ip", clientIp);
-                responseJson.put("location", city);
-                responseJson.put("greeting", String.format("Hello, %s! You are accessing from %s.", visitorName, city));
-                return responseJson.toString();
-            }
 
             if (city.equals("City not found")) {
                 throw new RuntimeException("City not found in the location response.");
@@ -45,6 +36,7 @@ public class HelloController {
             JSONObject weatherJson = new JSONObject(weatherResponse);
             double temperature = weatherJson.getJSONObject("current").getDouble("temp_c");
 
+            // Create response JSON
             JSONObject responseJson = new JSONObject();
             responseJson.put("client_ip", clientIp);
             responseJson.put("location", city);
@@ -65,12 +57,20 @@ public class HelloController {
 
             System.err.println("Error occurred in /api/hello endpoint: " + e.getMessage());
 
-
+            // Return a generic error response
             JSONObject errorResponse = new JSONObject();
             errorResponse.put("error", "Unable to fetch location and weather information");
             errorResponse.put("details", e.getMessage());
 
             return errorResponse.toString();
         }
+    }
+   //God Abeg😭
+    private String getClientIp(HttpServletRequest request) {
+        String header = request.getHeader("X-Forwarded-For");
+        if (header == null || header.isEmpty()) {
+            return request.getRemoteAddr();
+        }
+        return header.split(",")[0].trim();
     }
 }
